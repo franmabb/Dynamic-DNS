@@ -1,0 +1,11 @@
+- name: Provision DNS Server
+  hosts: dns_servers
+  become: yes
+  roles:
+    - dns_server
+
+- name: Provision DHCP Server
+  hosts: dhcp_servers
+  become: yes
+  roles:
+    - dhcp_server
