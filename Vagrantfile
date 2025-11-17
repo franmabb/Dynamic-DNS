@@ -3,7 +3,7 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "debian/bullseye64"
 
-  #Creación servidor DHCP 
+  #Creation server DHCP 
   config.vm.define "dhcp-server" do |server|
     server.vm.hostname = "dhcp-server"
     server.vm.network "private_network", 
@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
               auto_config: true
   end
 
-  #Creacion servidor DNS
+  #Creation server DNS
   config.vm.define "dns-server" do |dns|
     dns.vm.hostname = "dns-server"
     dns.vm.network "private_network",
@@ -23,7 +23,7 @@ Vagrant.configure("2") do |config|
   end
 
 
-  #Cliente 1
+  #Client 1
   config.vm.define "c1" do |c1|
     c1.vm.hostname = "c1"
     c1.vm.network "private_network",

@@ -36,6 +36,10 @@
       register: dhclient_result
       changed_when: false
       failed_when: false
+      
+    - name: Show obtained IP
+      ansible.builtin.debug:
+        msg: "{{ ip_result.stdout }}"
 
     - name: Show DHCP negotiation log
       ansible.builtin.debug:
@@ -47,6 +51,3 @@
       changed_when: false
       failed_when: false
 
-    - name: Show obtained IP
-      ansible.builtin.debug:
-        msg: "{{ ip_result.stdout }}"

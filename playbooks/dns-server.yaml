@@ -1,0 +1,101 @@
+- name: Configure DNS Server
+  hosts: dns-server
+  become: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install DNS server tools
+      ansible.builtin.apt:
+        name:
+          - bind9
+          - bind9utils
+          - bind9-doc
+          - dnsutils
+        state: present
+
+    - name: Generate TSIG key if not exists
+      ansible.builtin.command: tsig-keygen -a hmac-sha256 ddns-key
+      args:
+        creates: /etc/bind/ddns.key
+      notify: Save TSIG key
+      register: tsig_key
+      
+
+    - meta: flush_handlers
+    - name: Read TSIG key from file
+      ansible.builtin.slurp:
+        src: /etc/bind/ddns.key
+      register: keyfile
+
+    - name: Add key definition to named.conf.options
+      ansible.builtin.blockinfile:
+        path: /etc/bind/named.conf.options
+        insertafter: EOF
+        marker: "# {mark} ANSIBLE DDNS KEY" 
+        block: "{{ (keyfile.content | b64decode).strip() }}" 
+
+    - name: Configure local zones
+      ansible.builtin.copy:
+        dest: /etc/bind/named.conf.local
+        content: |
+          zone "franmab.es" IN {
+            type master;
+            file "/etc/bind/db.franmab.es";
+            allow-update { key "ddns-key"; };
+          };
+
+          zone "57.168.192.in-addr.arpa" IN {
+            type master;
+            file "/etc/bind/db.192";
+            allow-update { key "ddns-key"; };
+          };
+
+    - name: Create forward zone file
+      ansible.builtin.copy:
+        dest: /etc/bind/db.franmab.es
+        content: |
+          $TTL    604800
+          @       IN      SOA     dns-server.franmab.es. root.franmab.es. (
+                                2         ; Serial
+                                604800    ; Refresh
+                                86400     ; Retry
+                                2419200   ; Expire
+                                604800 )  ; Negative Cache TTL
+          ;
+          @       IN      NS      dns-server.franmab.es.
+          dns-server   IN  A      192.168.57.20
+
+    - name: Create reverse zone file
+      ansible.builtin.copy:
+        dest: /etc/bind/db.192
+        content: |
+          $TTL    604800
+          @       IN      SOA     dns-server.franmab.es. root.franmab.es. (
+                                2         ; Serial
+                                604800
+                                86400
+                                2419200
+                                604800 )
+          ;
+          @       IN      NS      dns-server.franmab.es.
+          20      IN      PTR     dns-server.franmab.es.
+
+    - name: Check BIND9 configuration
+      ansible.builtin.command: named-checkconf
+
+    - name: Restart BIND9
+      ansible.builtin.service:
+        name: bind9
+        state: restarted
+        enabled: true
+
+  handlers: 
+    - name: Save TSIG key
+      ansible.builtin.copy:
+        dest: /etc/bind/ddns.key
+        content: "{{ tsig_key.stdout }}"
+        owner: bind
+        group: bind
+        mode: "0600"
