@@ -1,4 +1,4 @@
-#### Practice 3. Dynamic DNS
+# Practice 3. Dynamic DNS
 
 ## Name: Francisco Mateos Bufí
 
