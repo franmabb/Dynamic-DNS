@@ -1,0 +1,52 @@
+- name: Configure DHCP Clients
+  hosts: clients
+  become: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install DHCP client tools
+      ansible.builtin.apt:
+        name:
+          - net-tools
+          - iproute2
+          - isc-dhcp-client
+        state: present
+
+    - name: Wait for network to be up
+      ansible.builtin.wait_for:
+        timeout: 10
+
+    - name: Release any old DHCP leases
+      ansible.builtin.command: dhclient -r enp0s8
+      ignore_errors: true
+
+    - name: Remove all old dhclient lease files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ lookup('fileglob', '/var/lib/dhcp/dhclient*.leases', wantlist=True) }}"
+
+    - name: Flush IP addresses on the interface
+      ansible.builtin.command: ip addr flush dev enp0s8
+
+    - name: Request new DHCP lease
+      ansible.builtin.command: dhclient -v enp0s8
+      register: dhclient_result
+      changed_when: false
+      failed_when: false
+
+    - name: Show DHCP negotiation log
+      ansible.builtin.debug:
+        msg: "{{ dhclient_result.stdout }}"
+
+    - name: Show current IP addresses
+      ansible.builtin.command: ip a
+      register: ip_result
+      changed_when: false
+      failed_when: false
+
+    - name: Show obtained IP
+      ansible.builtin.debug:
+        msg: "{{ ip_result.stdout }}"
