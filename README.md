@@ -1,6 +1,6 @@
-Practice 3. Dynamic DNS
+#### Practice 3. Dynamic DNS
 
-Name: Francisco Mateos Bufí
+## Name: Francisco Mateos Bufí
 
 Here is a **concise, clear list of instructions** describing what the project *should do* using **Vagrant + VirtualBox + Ansible**, without explaining DHCP/DNS logic.
 
