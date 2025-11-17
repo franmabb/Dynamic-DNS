@@ -1,12 +1,23 @@
-[dns_servers]
-dns
+all:
+  vars:
+    ansible_user: vagrant
+    ansible_python_interpreter: /usr/bin/python3
+  
+  children:
+    servers:
+      hosts:
+        dhcp-server:
+          ansible_host: 127.0.0.1
+          ansible_port: 2200
+          ansible_private_key_file: .vagrant/machines/dhcp-server/virtualbox/private_key
+        dns-server:
+          ansible_host: 127.0.0.1
+          ansible_port: 2222
+          ansible_private_key_file: .vagrant/machines/dns-server/virtualbox/private_key
 
-[dhcp_servers]
-dhcp
-
-[clients]
-cl
-
-[all_servers:children]
-dns_servers
-dhcp_servers
+    clients:
+      hosts:
+        c1:
+          ansible_host: 127.0.0.1
+          ansible_port: 2201
+          ansible_private_key_file: .vagrant/machines/c1/virtualbox/private_key

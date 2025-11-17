@@ -1,39 +1,38 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
 Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bullseye64"
 
-  
-  config.vm.box = "ubuntu/bionic64"
-
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "ansible/main.yml"
-    ansible.inventory_path = "inventory.ini"
+  #Creación servidor DHCP 
+  config.vm.define "dhcp-server" do |server|
+    server.vm.hostname = "dhcp-server"
+    server.vm.network "private_network", 
+              ip: "192.168.57.10", 
+              virtualbox__intnet: "intNet1",
+              auto_config: true
   end
 
-  # Definición de la red privada común
-  private_net = "192.168.58.0"
-  netmask = "255.255.255.0"
-
-  # Servidor DNS (dns)
-  config.vm.define "dns" do |dns|
-    dns.vm.hostname = "dns.example.test"
+  #Creacion servidor DNS
+  config.vm.define "dns-server" do |dns|
+    dns.vm.hostname = "dns-server"
     dns.vm.network "private_network",
-      ip: "192.168.58.10", # IP del servidor DNS [cite: 8]
-      virtualbox__intnet: "private_network_ddns"
+              ip: "192.168.57.20",
+              virtualbox__intnet: "intNet1",
+              auto_config: true
+ 
   end
 
-  # Servidor DHCP (dhcp)
-  config.vm.define "dhcp" do |dhcp|
-    dhcp.vm.hostname = "dhcp.example.test"
-    dhcp.vm.network "private_network",
-      ip: "192.168.58.20", # IP del servidor DHCP [cite: 9]
-      virtualbox__intnet: "private_network_ddns"
-  end
 
-  # Cliente (cl)
-  config.vm.define "cl" do |cl|
-    cl.vm.hostname = "cliente1"
-    cl.vm.network "private_network",
-      auto_config: false, # Deshabilita la configuración automática para que DHCP le asigne una IP [cite: 12]
-      virtualbox__intnet: "private_network_ddns"
+  #Cliente 1
+  config.vm.define "c1" do |c1|
+    c1.vm.hostname = "c1"
+    c1.vm.network "private_network",
+                  virtualbox__intnet: "intNet1",
+                  type: "dhcp"
+    c1.vm.provision "ansible" do |ansible|
+      ansible.playbook = "playbooks/client.yaml"
+      ansible.inventory_path = "inventory.yaml"
+    end
   end
 
 end
