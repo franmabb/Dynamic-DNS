@@ -60,5 +60,3 @@ Here is a **concise, clear list of instructions** describing what the project *s
    ```
 
 ---
-
-If you want, I can turn this into a **minimal README**, a **step-by-step guide**, or a **checklist style version**.
